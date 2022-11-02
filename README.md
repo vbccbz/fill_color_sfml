@@ -1,2 +1,2 @@
 # fill_color_sfml
-![](/snk.gif)
+![](/fill2.gif)
