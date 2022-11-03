@@ -8,6 +8,7 @@ int H = 10;
 
 class Pixel
 {
+private:
 
 public:
   int red, green, blue;
@@ -15,7 +16,7 @@ public:
   void print(void)
   {
     //std::cout << '|' << red << ' ' << green << ' ' << blue << '|';
-    std::cout << ' ' << red + green + blue << ' ';
+    std::cout << red << '.' << green << '.' << blue << '|';
   }
   bool operator== (Pixel const& p)
   {
@@ -31,13 +32,17 @@ public:
 class Canvas
 {
 private:
+  struct Coordinates
+  {
+    int y;
+    int x;
+    Coordinates(int yc, int xc) : y(yc), x(xc) {}
+  };
 public:
   std::vector < std::vector <Pixel> > pixels;
-  Canvas(void)
+  Canvas(void) { pixels.resize(W, std::vector <Pixel>(H)); }
+  void display(void)
   {
-    pixels.resize(W, std::vector <Pixel>(H));
-  }
-  void display(void) {
     for (size_t r = 0; r < pixels.size(); r++)
     {
       for (size_t c = 0; c < pixels[0].size(); c++)
@@ -48,31 +53,32 @@ public:
     }
     std::cout << "____________" << '\n';
   }
-  void setColor(int y, int x, Pixel const& c)
+  void setColor(int y, int x, int r, int g, int b)
   {
-    pixels[y][x] = c;
+    pixels[y][x].red = r;
+    pixels[y][x].green = g;
+    pixels[y][x].blue = b;
   }
   void fill(int y, int x, int r, int g, int b)
   {
-    Pixel need(r, g, b);
-    Pixel base(pixels[y][x]);
-    if (!(need == base))// ??????????????????????
-    {
-      struct Coordinates
-      {
-        int y;
-        int x;
-        Coordinates(int yc, int xc) : y(yc), x(xc) {}
-      };
-      Coordinates currentPosition(y, x);
+    Pixel requestedColor(r, g, b);
+    Pixel previousColor(pixels[y][x]);
 
+    // here a condition is needed to prevent infinite adding pixels with requested color in stack  
+    if (!(requestedColor == previousColor))
+    {
+
+      Coordinates currentPosition(y, x);
       std::stack <Coordinates> stackCoordinates;
       stackCoordinates.push(currentPosition);
+
       while (!stackCoordinates.empty())
       {
+
         currentPosition = stackCoordinates.top();
         stackCoordinates.pop();
-        pixels[currentPosition.y][currentPosition.x] = need;
+        // change color of first pixel
+        pixels[currentPosition.y][currentPosition.x] = requestedColor;
 
         //display();
 
@@ -83,20 +89,33 @@ public:
 
         if (up.y >= 0)
         {
-          if (pixels[up.y][up.x] == base) { stackCoordinates.push(up); }
+          if (pixels[up.y][up.x] == previousColor)
+          {
+            stackCoordinates.push(up);
+          }
         }
         if (down.y < H)
         {
-          if (pixels[down.y][down.x] == base) { stackCoordinates.push(down); }
+          if (pixels[down.y][down.x] == previousColor)
+          {
+            stackCoordinates.push(down);
+          }
         }
         if (left.x >= 0)
         {
-          if (pixels[left.y][left.x] == base) { stackCoordinates.push(left); }
+          if (pixels[left.y][left.x] == previousColor)
+          {
+            stackCoordinates.push(left);
+          }
         }
         if (right.x < W)
         {
-          if (pixels[right.y][right.x] == base) { stackCoordinates.push(right); }
+          if (pixels[right.y][right.x] == previousColor)
+          {
+            stackCoordinates.push(right);
+          }
         }
+
       }
     }
   }
@@ -108,25 +127,26 @@ int main(void)
 
   Canvas canvas;
 
-  canvas.setColor(5, 5, Pixel(255, 255, 0));
-  canvas.setColor(5 + 1, 5, Pixel(255, 0, 0));
-  canvas.setColor(5 - 1, 5, Pixel(255, 0, 0));
-  canvas.setColor(5, 5 + 1, Pixel(255, 0, 0));
-  canvas.setColor(5, 5 - 1, Pixel(255, 0, 0));
-  canvas.setColor(0, 0, Pixel(255, 0, 0));
+  canvas.setColor(5, 5, 255, 255, 0);
+  canvas.setColor(5 + 1, 5, 255, 255, 255);
+  canvas.setColor(5 - 1, 5, 255, 0, 0);
+  canvas.setColor(5, 5 + 1, 255, 0, 0);
+  canvas.setColor(5, 5 - 1, 255, 0, 0);
+  canvas.setColor(0, 0, 255, 0, 0);
+  canvas.setColor(3, 3, 128, 128, 128);
 
   canvas.display();
 
-  //int y; int x;
-  //int red; int green; int blue;
-
   sf::RectangleShape rect;
-  rect.setSize(sf::Vector2f(10.f, 10.f));
+  rect.setSize(sf::Vector2f(20.f, 20.f));
   rect.setFillColor(sf::Color::Red);
 
+  canvas.fill(1, 1, 0, 0, 255);
+  canvas.fill(1, 1, 0, 0, 255);
+
   while (window.isOpen())
-    //while (1)
   {
+
     sf::Event event;
     while (window.pollEvent(event))
     {
@@ -142,34 +162,30 @@ int main(void)
         }
         if (event.key.code == sf::Keyboard::G)
         {
-          canvas.fill(1, 1, 0, 0, 255);
+          canvas.fill(1, 1, 255, 255, 255);
           canvas.display();
         }
         if (event.key.code == sf::Keyboard::H)
         {
-          canvas.fill(1, 2, 0, 255, 0);
+          canvas.fill(1, 2, 0, 0, 0);
           canvas.display();
         }
       }
     }
 
+    //int y; int x;
+    //int red; int green; int blue;
     //std::cin >> y;
     //std::cin >> x;
     //std::cin >> red;
     //std::cin >> green;
-    //std::cin >> blue;
+    //std::cin >> blue; 
     //canvas.fill(y, x, red, green, blue);
-
     //canvas.fill(1, 1, 7, 0, 0);
     //canvas.fill(1, 2, 6, 0, 0);
-
     //canvas.display();
 
     window.clear();
-
-    //canvas.pixels[0][0].red;
-    //canvas.pixels[0][0].green;
-    //canvas.pixels[0][0].blue;
 
     for (size_t r = 0; r < 10; r++)
     {
@@ -177,12 +193,10 @@ int main(void)
       {
         //rect.setFillColor(sf::Color::Red);
         rect.setFillColor(sf::Color(canvas.pixels[r][c].red, canvas.pixels[r][c].green, canvas.pixels[r][c].blue));
-        rect.setPosition(r * 10, c * 10);
+        rect.setPosition(r * 20, c * 20);
         window.draw(rect);
       }
     }
-    //rect.setPosition(0, 0);
-    //window.draw(rect);
 
     window.display();
   }
