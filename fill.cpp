@@ -3,72 +3,87 @@
 #include <vector>
 #include <stack>
 
-int W = 10;
-int H = 10;
-
-class Pixel
-{
-private:
-
-public:
-  int red, green, blue;
-  Pixel(int r = 0, int g = 0, int b = 0) : red(r), green(g), blue(b) { }
-  void print(void)
-  {
-    //std::cout << '|' << red << ' ' << green << ' ' << blue << '|';
-    std::cout << red << '.' << green << '.' << blue << '|';
-  }
-  bool operator== (Pixel const& p)
-  {
-    bool result = false;
-    if (p.red == red && p.green == green && p.blue == blue)
-    {
-      result = true;
-    }
-    return result;
-  }
-};
+int const pixelsWidth = 400;
+int const pixelsHigh = 400;
+int const pixelSize = 20;
 
 class Canvas
 {
-private:
+public:
+
+  class Color
+  {
+  private:
+
+  public:
+    int red, green, blue;
+    Color(int r = 0, int g = 0, int b = 0) : red(r), green(g), blue(b) { }
+    //void print(void)
+    //{
+    //  //std::cout << '|' << red << ' ' << green << ' ' << blue << '|';
+    //  std::cout << red << '.' << green << '.' << blue << '|';
+    //}
+    bool operator== (Color const& p)
+    {
+      bool result = false;
+      if (p.red == red && p.green == green && p.blue == blue)
+      {
+        result = true;
+      }
+      return result;
+    }
+  };
+
   struct Coordinates
   {
-    int y;
     int x;
-    Coordinates(int yc, int xc) : y(yc), x(xc) {}
+    int y;
+    Coordinates(int xc, int yc) : x(xc), y(yc) {}
   };
+
 public:
-  std::vector < std::vector <Pixel> > pixels;
-  Canvas(void) { pixels.resize(W, std::vector <Pixel>(H)); }
-  void display(void)
+
+  std::vector < std::vector <Color> > pixels;
+  Canvas(int W, int H)
   {
-    for (size_t r = 0; r < pixels.size(); r++)
-    {
-      for (size_t c = 0; c < pixels[0].size(); c++)
-      {
-        pixels[r][c].print();
-      }
-      std::cout << '\n';
-    }
-    std::cout << "____________" << '\n';
+    pixels.resize(H, std::vector <Color>(W));
   }
-  void setColor(int y, int x, int r, int g, int b)
+
+  //void display(void)
+  //{
+  //  for (size_t r = 0; r < pixels.size(); r++)
+  //  {
+  //    for (size_t c = 0; c < pixels[0].size(); c++)
+  //    {
+  //      pixels[r][c].print();
+  //    }
+  //    std::cout << '\n';
+  //  }
+  //  std::cout << "____________" << '\n';
+  //}
+
+  void setColor(int x, int y, int r, int g, int b)
   {
     pixels[y][x].red = r;
     pixels[y][x].green = g;
     pixels[y][x].blue = b;
   }
-  void fill(int y, int x, int r, int g, int b)
+
+  Color& at(int x, int y)
   {
-    Pixel requestedColor(r, g, b);
-    Pixel previousColor(pixels[y][x]);
+    return pixels[y][x];
+  }
+
+  void fill(int x, int y, int r, int g, int b)
+  {
+    Color requestedColor(r, g, b);
+    Color previousColor(pixels[y][x]);
 
     // here a condition is needed to prevent infinite adding pixels with requested color in stack  
     if (!(requestedColor == previousColor))
     {
 
-      Coordinates currentPosition(y, x);
+      Coordinates currentPosition(x, y);
       std::stack <Coordinates> stackCoordinates;
       stackCoordinates.push(currentPosition);
 
@@ -78,71 +93,76 @@ public:
         currentPosition = stackCoordinates.top();
         stackCoordinates.pop();
         // change color of first pixel
-        pixels[currentPosition.y][currentPosition.x] = requestedColor;
+        at(currentPosition.x, currentPosition.y) = requestedColor;
 
         //display();
 
-        Coordinates up(currentPosition.y - 1, currentPosition.x);
-        Coordinates down(currentPosition.y + 1, currentPosition.x);
-        Coordinates left(currentPosition.y, currentPosition.x - 1);
-        Coordinates right(currentPosition.y, currentPosition.x + 1);
+        Coordinates up(currentPosition.x, currentPosition.y - 1);
+        Coordinates down(currentPosition.x, currentPosition.y + 1);
+        Coordinates left(currentPosition.x - 1, currentPosition.y);
+        Coordinates right(currentPosition.x + 1, currentPosition.y);
 
         if (up.y >= 0)
         {
-          if (pixels[up.y][up.x] == previousColor)
+          if (at(up.x, up.y) == previousColor)
           {
             stackCoordinates.push(up);
           }
         }
-        if (down.y < H)
+        //if (down.y < pixels.size())
+        if (down.y < 10)
         {
-          if (pixels[down.y][down.x] == previousColor)
+          if (at(down.x, down.y) == previousColor)
           {
             stackCoordinates.push(down);
           }
         }
         if (left.x >= 0)
         {
-          if (pixels[left.y][left.x] == previousColor)
+          if (at(left.x, left.y) == previousColor)
           {
             stackCoordinates.push(left);
           }
         }
-        if (right.x < W)
+        //if (right.x < pixels.size())
+        if (right.x < 10)
         {
-          if (pixels[right.y][right.x] == previousColor)
+          if (at(right.x, right.y) == previousColor)
           {
             stackCoordinates.push(right);
           }
         }
 
-      }
+      }// end of while
     }
   }
 };
 
 int main(void)
 {
-  sf::RenderWindow window(sf::VideoMode(800, 600), "FILL");
+  sf::RenderWindow window(sf::VideoMode(pixelsWidth, pixelsHigh), "FILL");
 
-  Canvas canvas;
+  Canvas canvas(pixelsWidth / pixelSize, pixelsHigh / pixelSize);
 
-  canvas.setColor(5, 5, 255, 255, 0);
-  canvas.setColor(5 + 1, 5, 255, 255, 255);
+  canvas.setColor(0, 0, 255, 0, 255);
+  canvas.setColor(pixelsWidth / pixelSize - 1, 0, 255, 0, 255);
+  canvas.setColor(0, pixelsHigh / pixelSize - 1, 255, 0, 255);
+  canvas.setColor(pixelsWidth / pixelSize - 1, pixelsHigh / pixelSize - 1, 255, 0, 255);
+
+  canvas.setColor(5 + 1, 5, 255, 0, 0);
   canvas.setColor(5 - 1, 5, 255, 0, 0);
   canvas.setColor(5, 5 + 1, 255, 0, 0);
   canvas.setColor(5, 5 - 1, 255, 0, 0);
-  canvas.setColor(0, 0, 255, 0, 0);
-  canvas.setColor(3, 3, 128, 128, 128);
 
-  canvas.display();
+  //canvas.display();
 
   sf::RectangleShape rect;
-  rect.setSize(sf::Vector2f(20.f, 20.f));
+  rect.setSize(sf::Vector2f(pixelSize, pixelSize));
   rect.setFillColor(sf::Color::Red);
+  rect.setFillColor(sf::Color(255, 0, 0));
 
-  canvas.fill(1, 1, 0, 0, 255);
-  canvas.fill(1, 1, 0, 0, 255);
+  canvas.fill(1, 1, 255, 255, 255);
+  canvas.fill(1, 1, 255, 255, 255);
 
   while (window.isOpen())
   {
@@ -160,18 +180,42 @@ int main(void)
         {
           window.close();
         }
-        if (event.key.code == sf::Keyboard::G)
+        if (event.key.code == sf::Keyboard::Q)
         {
           canvas.fill(1, 1, 255, 255, 255);
-          canvas.display();
+          //canvas.display();
         }
-        if (event.key.code == sf::Keyboard::H)
+        if (event.key.code == sf::Keyboard::W)
         {
-          canvas.fill(1, 2, 0, 0, 0);
-          canvas.display();
+          canvas.fill(1, 2, 128, 0, 128);
+          //canvas.display();
         }
       }
-    }
+
+      if (event.type == sf::Event::MouseButtonPressed)
+      {
+        if (event.mouseButton.button == sf::Mouse::Left)
+        {
+          //canvas.fill(1, 2, 128, 128, 128);
+          canvas.setColor((event.mouseButton.x) / pixelSize, (event.mouseButton.y) / pixelSize, 255, 255, 128);
+
+          //std::cout <<  static_cast<int> (event.mouseButton.y) << ' ' << static_cast<int> (event.mouseButton.x) << std::endl;
+          std::cout << event.mouseButton.y << ' ' << event.mouseButton.x << std::endl;
+
+        }
+        if (event.mouseButton.button == sf::Mouse::Right)
+        {
+          canvas.fill( (event.mouseButton.x) / pixelSize, (event.mouseButton.y) / pixelSize, 128, 128, 128);
+
+        }
+      }
+
+    }// while (window.pollEvent(event))
+
+    //if (sf::Mouse::isButtonPressed(sf::Mouse::Right))
+    //{
+      //std::cout << "rm" << std::endl;
+    //}
 
     //int y; int x;
     //int red; int green; int blue;
@@ -187,18 +231,22 @@ int main(void)
 
     window.clear();
 
-    for (size_t r = 0; r < 10; r++)
+    for (size_t r = 0; r < pixelsHigh / pixelSize; r++)
     {
-      for (size_t c = 0; c < 10; c++)
+      for (size_t c = 0; c < pixelsWidth / pixelSize; c++)
       {
-        //rect.setFillColor(sf::Color::Red);
-        rect.setFillColor(sf::Color(canvas.pixels[r][c].red, canvas.pixels[r][c].green, canvas.pixels[r][c].blue));
-        rect.setPosition(r * 20, c * 20);
+        Canvas::Color const& pr = canvas.at(r, c);
+        rect.setFillColor(sf::Color(pr.red, pr.green, pr.blue));
+        rect.setPosition(r * pixelSize, c * pixelSize);
         window.draw(rect);
       }
     }
 
+    //window.draw(rect);
+
     window.display();
-  }
+
+  }// while (window.isOpen())
+
   return 0;
 }
