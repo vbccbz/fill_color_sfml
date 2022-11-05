@@ -18,6 +18,7 @@ public:
   public:
     int red, green, blue;
     Color(int r = 0, int g = 0, int b = 0) : red(r), green(g), blue(b) { }
+    Color(Color const& cr) : red(cr.red), green(cr.green), blue(cr.blue) { }
     //void print(void)
     //{
     //  //std::cout << '|' << red << ' ' << green << ' ' << blue << '|';
@@ -41,12 +42,14 @@ public:
     Coordinates(int xc, int yc) : x(xc), y(yc) {}
   };
 
+  int height;
+  int width;
 public:
 
   std::vector < std::vector <Color> > pixels;
-  Canvas(int W, int H)
+  Canvas(int w, int h) : width(w), height(h)
   {
-    pixels.resize(H, std::vector <Color>(W));
+    pixels.resize(h, std::vector <Color>(w));
   }
 
   //void display(void)
@@ -64,9 +67,12 @@ public:
 
   void setColor(int x, int y, int r, int g, int b)
   {
-    pixels[y][x].red = r;
-    pixels[y][x].green = g;
-    pixels[y][x].blue = b;
+    if ((x >= 0) && (y >= 0) && (x < width) && (y < height))
+    {
+      pixels[y][x].red = r;
+      pixels[y][x].green = g;
+      pixels[y][x].blue = b;
+    }
   }
 
   Color& at(int x, int y)
@@ -77,7 +83,7 @@ public:
   void fill(int x, int y, int r, int g, int b)
   {
     Color requestedColor(r, g, b);
-    Color previousColor(pixels[y][x]);
+    Color previousColor(at(x, y));
 
     // here a condition is needed to prevent infinite adding pixels with requested color in stack  
     if (!(requestedColor == previousColor))
@@ -109,8 +115,7 @@ public:
             stackCoordinates.push(up);
           }
         }
-        //if (down.y < pixels.size())
-        if (down.y < 10)
+        if (down.y < width )
         {
           if (at(down.x, down.y) == previousColor)
           {
@@ -124,8 +129,7 @@ public:
             stackCoordinates.push(left);
           }
         }
-        //if (right.x < pixels.size())
-        if (right.x < 10)
+        if (right.x < height )
         {
           if (at(right.x, right.y) == previousColor)
           {
@@ -161,9 +165,11 @@ int main(void)
   rect.setFillColor(sf::Color::Red);
   rect.setFillColor(sf::Color(255, 0, 0));
 
-  canvas.fill(1, 1, 255, 255, 255);
-  canvas.fill(1, 1, 255, 255, 255);
+  //canvas.fill(1, 1, 255, 255, 255);
+  canvas.fill(1, 1, 0, 255, 255);
 
+    int mx = 0;
+    int my = 0;
   while (window.isOpen())
   {
 
@@ -191,31 +197,39 @@ int main(void)
           //canvas.display();
         }
       }
+      if (event.type == sf::Event::MouseMoved)
+      {
+        //std::cout << event.mouseMove.x << ' ' << event.mouseMove.y << std::endl;
+        mx = event.mouseMove.x;
+        my = event.mouseMove.y;
+        std::cout << mx << ' ' << my << std::endl;
+      }
 
       if (event.type == sf::Event::MouseButtonPressed)
       {
-        if (event.mouseButton.button == sf::Mouse::Left)
-        {
-          //canvas.fill(1, 2, 128, 128, 128);
-          canvas.setColor((event.mouseButton.x) / pixelSize, (event.mouseButton.y) / pixelSize, 255, 255, 128);
+        //if (event.mouseButton.button == sf::Mouse::Left)
+        //{
+        //  mx = event.mouseButton.x;
+        //  my = event.mouseButton.y;
+        //  std::cout << mx << ' ' << my << std::endl;
 
-          //std::cout <<  static_cast<int> (event.mouseButton.y) << ' ' << static_cast<int> (event.mouseButton.x) << std::endl;
-          std::cout << event.mouseButton.y << ' ' << event.mouseButton.x << std::endl;
 
-        }
+        //  //canvas.setColor((event.mouseButton.x) / pixelSize, (event.mouseButton.y) / pixelSize, 255, 255, 128);
+        //  //std::cout << event.mouseButton.x << ' ' << event.mouseButton.y << std::endl;
+        //}
         if (event.mouseButton.button == sf::Mouse::Right)
         {
-          canvas.fill( (event.mouseButton.x) / pixelSize, (event.mouseButton.y) / pixelSize, 128, 128, 128);
-
+          canvas.fill((event.mouseButton.x) / pixelSize, (event.mouseButton.y) / pixelSize, 128, 128, 128);
         }
       }
 
     }// while (window.pollEvent(event))
 
-    //if (sf::Mouse::isButtonPressed(sf::Mouse::Right))
-    //{
-      //std::cout << "rm" << std::endl;
-    //}
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+    {
+      canvas.setColor( mx / pixelSize, my / pixelSize, 128, 255, 128);
+      std::cout << mx << ' ' << my << std::endl;
+    }
 
     //int y; int x;
     //int red; int green; int blue;
